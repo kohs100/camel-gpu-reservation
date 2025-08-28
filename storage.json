@@ -1,0 +1,20 @@
+{
+  "gpu_status": {
+    "nvidia.com/gpu=GPU-7923e41c-ce48-a120-dd68-57ef8157da72": {
+      "invalid_until": 0.0,
+      "user": "kohs100"
+    },
+    "nvidia.com/gpu=GPU-7ff80503-e195-3bad-ef46-05dfca9a0952": {
+      "invalid_until": 0.0,
+      "user": "kohs100"
+    },
+    "nvidia.com/gpu=GPU-9ab7bd29-1139-4f20-fb61-f94ab67d9c0a": {
+      "invalid_until": 0.0,
+      "user": "kohs100"
+    }
+  },
+  "port_mapping": {
+    "kohs100": 10500,
+    "mcjung": 10501
+  }
+}

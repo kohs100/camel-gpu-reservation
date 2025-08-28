@@ -1,0 +1,13 @@
+[project]
+name = "gpu-rent"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.9"
+dependencies = [
+    "black>=25.1.0",
+    "fastapi>=0.116.1",
+    "filelock>=3.19.1",
+    "paramiko>=4.0.0",
+    "uvicorn>=0.35.0",
+]
