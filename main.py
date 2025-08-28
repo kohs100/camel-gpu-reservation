@@ -11,16 +11,12 @@ from util import acquire_gpus, release_gpus, AuthorizedContainer
 app = FastAPI()
 app.mount("/static", StaticFiles(directory="static"), name="static")
 
+
 @app.post("/api/extend")
 async def extend_docker(req: ExtendReqData):
     print(f"Received extension request: {req}")
 
     auth = Auth.login(req.username, req.password)
-    if auth is None:
-        return JSONResponse(
-            status_code=401, content={"message": "Authorization failed."}
-        )
-
     container = AuthorizedContainer(auth)
     if not container.is_running():
         return JSONResponse(
@@ -52,20 +48,15 @@ async def reserve_docker(req: ReservationReqData):
     print(f"Received reservation request: {req}")
 
     auth = Auth.login(req.username, req.password)
-    if auth is None:
+    acquired_port = acquire_gpus(req, auth)
+    if acquired_port is None:
         return JSONResponse(
-            status_code=401, content={"message": "Authorization failed."}
-        )
-
-    acquired = acquire_gpus(req, auth)
-    if acquired is not None:
-        return JSONResponse(
-            status_code=200,
-            content={"message": "Successfully launched.", "port": acquired},
+            status_code=400, content={"message": "Failed to launch container."}
         )
     else:
         return JSONResponse(
-            status_code=400, content={"message": "Failed to launch container."}
+            status_code=200,
+            content={"message": "Successfully launched.", "port": acquired_port},
         )
 
 
@@ -74,12 +65,7 @@ async def release_docker(req: ReleaseReqData):
     print(f"Received release request: {req}")
 
     auth = Auth.login(req.username, req.password)
-    if auth is None:
-        return JSONResponse(
-            status_code=401, content={"message": "Authorization failed."}
-        )
-
-    release_gpus(req, auth)
+    release_gpus(auth)
     return JSONResponse(status_code=200, content={"message": "Released container."})
 
 
@@ -88,11 +74,6 @@ async def get_user_status(req: ReleaseReqData):
     print(f"Received ustat request: {req}")
 
     auth = Auth.login(req.username, req.password)
-    if auth is None:
-        return JSONResponse(
-            status_code=401, content={"message": "Authorization failed."}
-        )
-
     container = AuthorizedContainer(auth)
     return JSONResponse(
         status_code=200,
@@ -106,7 +87,7 @@ async def get_user_status(req: ReleaseReqData):
     )
 
 
-@app.get("/api/status")
+@app.get("/api/status", response_class=JSONResponse)
 async def get_status():
     with StorageCtx(readonly=True) as storage:
         return JSONResponse(status_code=200, content=storage.model_dump())

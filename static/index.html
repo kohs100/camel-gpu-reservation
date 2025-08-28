@@ -12,22 +12,21 @@
     <p>
       1. 사용할 GPU를 체크하고 acquire하면 컨테이너가 뜹니다. 기본적으로 할당
       포트는 사용자별로 고정이며 한번 할당되면 변하지 않습니다. 아무 GPU도
-      체크하지 않을 경우 cpu-only 컨테이너에서 작업할 수 있습니다. 이 경우
+      체크하지 않을 경우 CPU-only 컨테이너에서 작업할 수 있습니다. 이 경우
       release하지 않는 이상 컨테이너가 종료되지 않습니다.
     </p>
     <p>
-      2. 예약시간 이후의 컨테이너는 언제든 종료될 수 있습니다. 예약시간 이전에
-      종료하려면 release를 누르세요.
+      2. GPU를 반환하고 컨테이너를 종료하려면 release하세요. 체크를 모두
+      해제하고 acquire하면 CPU-only 모드가 됩니다.
     </p>
-    <p>3. 사용할 GPU의 수를 변경하려면 release하고 다시 acquire하세요.</p>
     <p>
-      4. 용량이 큰 데이터는 /data 디렉토리를 이용해주세요. /home, /root, /data
+      3. 용량이 큰 데이터는 /data 디렉토리를 이용해주세요. /home, /root, /data
       외의 경로에 데이터가 많을 경우 컨테이너 재실행 시간이 과도하게 오래 걸릴
       수 있습니다.
     </p>
     <form id="gpuForm" style="padding: 10px; border: 1px solid black">
       <label for="username">Username:</label>
-      <input type="text" id="username" name="username" /><br/>
+      <input type="text" id="username" name="username" /><br />
 
       <label for="password">Password:</label>
       <input type="password" id="password" name="password" /><br /><br />
@@ -36,7 +35,7 @@
       <div id="available_gpus"></div>
       <br />
 
-      <label for="reserved_time">Reserved Time (in hours):</label>
+      <label for="reserved_time">Reservation hours (from now):</label>
       <input
         type="number"
         id="reserved_time"

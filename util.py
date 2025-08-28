@@ -3,7 +3,7 @@ from typing import List, Optional
 from util_auth import Auth
 from util_storage import StorageCtx
 from util_container import UnsafeContainer
-from util_types import ReleaseReqData, ReservationReqData
+from util_types import ReservationReqData
 
 MAX_PORT = 11000
 
@@ -34,12 +34,14 @@ class AuthorizedContainer(UnsafeContainer):
     def run(self, privileged: bool, gpus: List[str]):
         self.unsafe_run(privileged, gpus, self.auth.password, self.get_port())
 
-def release_gpus(req: ReleaseReqData, auth: Auth):
+
+def release_gpus(auth: Auth):
     with StorageCtx(readonly=False) as storage:
         for _gid, gstate in storage.gpu_status.items():
-            if gstate.is_occupied_by(req.username):
+            if gstate.is_occupied_by(auth.username):
                 gstate.release(auth)
     AuthorizedContainer(auth).kill()
+
 
 def acquire_gpus(req: ReservationReqData, auth: Auth) -> Optional[int]:
     container = AuthorizedContainer(auth)
@@ -47,16 +49,12 @@ def acquire_gpus(req: ReservationReqData, auth: Auth) -> Optional[int]:
 
     shutdown_users: List[str] = []
     with StorageCtx(readonly=False) as storage:
-        available = True
-        is_extension = True
+        request_is_legal = True
         for gid in req.GPUs:
-            if not storage.gpu_status[gid].is_occupied_by(req.username):
-                is_extension = False
-            if not storage.gpu_status[gid].is_available():
-                available = False
-
-        if not is_extension and not available:
-            # Reservation is illegal
+            gstate = storage.gpu_status[gid]
+            if not gstate.is_occupied_by(req.username) and not gstate.is_available():
+                request_is_legal = False
+        if not request_is_legal:
             return None
 
         # Reservation is legal

@@ -186,17 +186,17 @@ const loadStatus = async () => {
 
   let innerHTML = "";
 
-  Object.entries(gpu_status).map(([key, value]) => {
-    if (value["invalid_until"] > currentTime) {
-      innerHTML += `<input type="checkbox" disabled id="${key}" name="gpus" value="${key}">`;
-      innerHTML += `<label for="${key}">${key} (Reserved by ${
-        value["user"]
+  Object.entries(gpu_status).map(([gid, gstate]) => {
+    if (gstate["invalid_until"] > currentTime) {
+      innerHTML += `<input type="checkbox" name="gpus" value="${gid}">`;
+      innerHTML += `<label for="${gid}">${gid} (Reserved by ${
+        gstate["user"]
       } until ${new Date(
-        value["invalid_until"] * 1000
+        gstate["invalid_until"] * 1000
       ).toLocaleString()})</label><br>`;
     } else {
-      innerHTML += `<input type="checkbox" id="${key}" name="gpus" value="${key}">`;
-      innerHTML += `<label for="${key}">${key}</label><br>`;
+      innerHTML += `<input type="checkbox" id="${gid}" name="gpus" value="${gid}">`;
+      innerHTML += `<label for="${gid}">${gid}</label><br>`;
     }
   });
 
