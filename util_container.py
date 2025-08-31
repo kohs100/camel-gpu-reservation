@@ -78,6 +78,9 @@ class UnsafeContainer:
     def is_running(self):
         return self.get_state() == "RUNNING"
 
+    def get_port(self) -> int:
+        raise NotImplementedError("Cannot get port in unauthorized context")
+
     def get_state(self) -> ContainerState:
         result = subprocess.run(
             ["docker", "inspect", "-f", "{{.State.Running}}", self.container_name],

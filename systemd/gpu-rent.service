@@ -1,0 +1,16 @@
+[Unit]
+Description=GPU rent service deployment
+After=network.target
+
+[Service]
+WorkingDirectory=/root/services/gpu-rent
+
+# 서비스를 실행할 명령어
+# uv 가상환경 내의 uvicorn 실행 파일의 절대 경로를 사용해야 합니다.
+ExecStart=/root/services/gpu-rent/.venv/bin/uvicorn main:app --host 0.0.0.0 --port 3001
+
+# 실패 시 항상 재시작
+Restart=always
+
+[Install]
+WantedBy=multi-user.target
