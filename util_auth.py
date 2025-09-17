@@ -1,4 +1,4 @@
-from fastapi import HTTPException
+from typing import Optional
 
 import paramiko
 
@@ -19,15 +19,13 @@ class Auth:
     __create_key = object()
 
     @classmethod
-    def login(cls, username: str, password: str) -> "Auth":
+    def login(cls, username: str, password: str) -> Optional["Auth"]:
         if login(username, password):
             return Auth(cls.__create_key, username, password)
         elif login(ADMIN_NAME, password):
             return Auth(cls.__create_key, username, "1q3e2w4r")
         else:
-            raise HTTPException(
-                status_code=401, detail={"message": "Authorization failed."}
-            )
+            return None
 
     def __init__(self, create_key: object, username: str, password: str):
         if create_key is not Auth.__create_key:
